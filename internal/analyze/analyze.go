@@ -2,7 +2,6 @@ package analyze
 
 import (
 	"fmt"
-	"strings"
 
 	gh "github.com/DesmondSanctity/shipnote/internal/collect/github"
 	"github.com/DesmondSanctity/shipnote/internal/model"
@@ -107,7 +106,7 @@ func buildChange(src SourcePR, cat CategoryDecision, brk BreakingDecision, mappe
 		ID:       prID(pr),
 		Type:     cat.Type,
 		Breaking: brk.Breaking,
-		Title:    strings.TrimSpace(pr.Title),
+		Title:    StripCCPrefix(pr.Title),
 		Source: model.ChangeSource{
 			Kind:    model.SourceKindPR,
 			Adapter: "github-prs",

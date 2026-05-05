@@ -138,6 +138,20 @@ func fromConventionalCommit(title string) (CategoryDecision, bool) {
 	return CategoryDecision{Type: t, Confidence: conf, Source: "cc-prefix"}, true
 }
 
+// StripCCPrefix removes a Conventional Commit prefix ("feat:",
+// "fix(scope)!:", etc.) from a title, leaving only the human-readable
+// description. Returns the input untouched if no prefix matches. The
+// renderer uses this so notes read naturally for non-engineer
+// audiences while categorisation keeps full access to the structured
+// prefix.
+func StripCCPrefix(title string) string {
+	t := strings.TrimSpace(title)
+	if loc := ccRe.FindStringIndex(t); loc != nil {
+		t = strings.TrimSpace(t[loc[1]:])
+	}
+	return t
+}
+
 // fromFileHeuristic returns "docs" when every file is under docs/ or is
 // a markdown file at the repo root; "test" when every file lives under
 // a test directory. Otherwise no decision.
