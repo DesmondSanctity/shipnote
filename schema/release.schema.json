@@ -1,0 +1,825 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://shipnote.dev/schema/release.schema.json",
+ "title": "shipnote release",
+ "description": "Normalized release record emitted by shipnote. Licensed Apache-2.0; see LICENSE.",
+ "type": "object",
+ "required": [
+  "schemaVersion",
+  "id",
+  "metadata",
+  "repo",
+  "range",
+  "release",
+  "summary",
+  "stats",
+  "packages",
+  "globalChanges",
+  "breakingChanges",
+  "contributors",
+  "excluded"
+ ],
+ "additionalProperties": false,
+ "properties": {
+  "schemaVersion": {
+   "type": "string",
+   "pattern": "^\\d+\\.\\d+\\.\\d+$"
+  },
+  "id": {
+   "type": "string",
+   "minLength": 1
+  },
+  "previousReleaseId": {
+   "type": "string"
+  },
+  "metadata": {
+   "type": "object",
+   "required": [
+    "generatedAt",
+    "generator",
+    "determinismKey",
+    "sources"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "generatedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "generator": {
+     "type": "object",
+     "required": [
+      "name",
+      "version"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "name": {
+       "type": "string"
+      },
+      "version": {
+       "type": "string"
+      }
+     }
+    },
+    "determinismKey": {
+     "type": "string"
+    },
+    "sources": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "repo": {
+   "type": "object",
+   "required": [
+    "provider",
+    "owner",
+    "name",
+    "url",
+    "defaultBranch"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "provider": {
+     "type": "string"
+    },
+    "owner": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "url": {
+     "type": "string"
+    },
+    "defaultBranch": {
+     "type": "string"
+    }
+   }
+  },
+  "range": {
+   "type": "object",
+   "required": [
+    "from",
+    "to"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "from": {
+     "$ref": "#/$defs/rangePoint"
+    },
+    "to": {
+     "$ref": "#/$defs/rangePoint"
+    }
+   }
+  },
+  "release": {
+   "type": "object",
+   "required": [
+    "state",
+    "name",
+    "tag",
+    "isPrerelease",
+    "publishedAt"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "state": {
+     "enum": [
+      "unreleased",
+      "draft",
+      "released"
+     ]
+    },
+    "name": {
+     "type": "string"
+    },
+    "tag": {
+     "type": "string"
+    },
+    "isPrerelease": {
+     "type": "boolean"
+    },
+    "publishedAt": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "date-time"
+    }
+   }
+  },
+  "summary": {
+   "$ref": "#/$defs/summary"
+  },
+  "stats": {
+   "$ref": "#/$defs/stats"
+  },
+  "packages": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/package"
+   }
+  },
+  "globalChanges": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/change"
+   }
+  },
+  "breakingChanges": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/breakingChange"
+   }
+  },
+  "contributors": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/contributor"
+   }
+  },
+  "excluded": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "id",
+     "reason"
+    ],
+    "additionalProperties": false,
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "reason": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ },
+ "$defs": {
+  "rangePoint": {
+   "type": "object",
+   "required": [
+    "ref",
+    "sha",
+    "date"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "ref": {
+     "type": "string"
+    },
+    "sha": {
+     "type": "string"
+    },
+    "date": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "summary": {
+   "type": "object",
+   "required": [
+    "headline",
+    "aiSummaries"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "headline": {
+     "type": "string"
+    },
+    "aiSummaries": {
+     "$ref": "#/$defs/aiSummaries"
+    }
+   }
+  },
+  "aiSummaries": {
+   "type": "object",
+   "required": [
+    "developer",
+    "customer",
+    "migration"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "developer": {
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/aiSummary"
+      }
+     ]
+    },
+    "customer": {
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/aiSummary"
+      }
+     ]
+    },
+    "migration": {
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/aiSummary"
+      }
+     ]
+    }
+   }
+  },
+  "aiSummary": {
+   "type": "object",
+   "required": [
+    "text",
+    "model",
+    "promptVersion"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "model": {
+     "type": "string"
+    },
+    "promptVersion": {
+     "type": "string"
+    }
+   }
+  },
+  "stats": {
+   "type": "object",
+   "required": [
+    "changes",
+    "features",
+    "fixes",
+    "breaking",
+    "deprecations",
+    "perf",
+    "security",
+    "docs",
+    "internal",
+    "filesChanged"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "changes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "features": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "fixes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "breaking": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "deprecations": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "perf": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "security": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "docs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "internal": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "contributors": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "filesChanged": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "excluded": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "package": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "path",
+    "ecosystem",
+    "tagPrefix",
+    "version",
+    "summary",
+    "changes",
+    "breakingChanges",
+    "stats"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "path": {
+     "type": "string"
+    },
+    "ecosystem": {
+     "type": "string"
+    },
+    "tagPrefix": {
+     "type": "string"
+    },
+    "version": {
+     "type": "object",
+     "required": [
+      "previous",
+      "current",
+      "bump"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "previous": {
+       "type": "string"
+      },
+      "current": {
+       "type": "string"
+      },
+      "bump": {
+       "enum": [
+        "major",
+        "minor",
+        "patch",
+        "prerelease",
+        "none"
+       ]
+      }
+     }
+    },
+    "summary": {
+     "$ref": "#/$defs/summary"
+    },
+    "changes": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/change"
+     }
+    },
+    "breakingChanges": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/breakingChange"
+     }
+    },
+    "stats": {
+     "$ref": "#/$defs/stats"
+    }
+   }
+  },
+  "change": {
+   "type": "object",
+   "required": [
+    "id",
+    "type",
+    "breaking",
+    "title",
+    "source",
+    "author",
+    "coAuthors",
+    "packages",
+    "files",
+    "references",
+    "migration",
+    "aiSummaries",
+    "confidence"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "type": {
+     "enum": [
+      "feat",
+      "fix",
+      "breaking",
+      "deprecation",
+      "perf",
+      "security",
+      "docs",
+      "chore",
+      "refactor",
+      "test",
+      "build",
+      "ci",
+      "other"
+     ]
+    },
+    "scope": {
+     "type": "string"
+    },
+    "breaking": {
+     "type": "boolean"
+    },
+    "title": {
+     "type": "string"
+    },
+    "description": {
+     "type": "string"
+    },
+    "source": {
+     "type": "object",
+     "required": [
+      "kind",
+      "adapter",
+      "pr",
+      "commits"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "kind": {
+       "enum": [
+        "pr",
+        "commit",
+        "changeset",
+        "release-please"
+       ]
+      },
+      "adapter": {
+       "type": "string"
+      },
+      "pr": {
+       "oneOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "object",
+         "required": [
+          "number",
+          "url",
+          "mergedAt",
+          "mergeStrategy",
+          "labels"
+         ],
+         "additionalProperties": false,
+         "properties": {
+          "number": {
+           "type": "integer",
+           "minimum": 1
+          },
+          "url": {
+           "type": "string"
+          },
+          "mergedAt": {
+           "type": "string",
+           "format": "date-time"
+          },
+          "mergeStrategy": {
+           "enum": [
+            "squash",
+            "merge",
+            "rebase",
+            "unknown"
+           ]
+          },
+          "labels": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          }
+         }
+        }
+       ]
+      },
+      "commits": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "sha",
+         "shortSha",
+         "message"
+        ],
+        "additionalProperties": false,
+        "properties": {
+         "sha": {
+          "type": "string"
+         },
+         "shortSha": {
+          "type": "string"
+         },
+         "url": {
+          "type": "string"
+         },
+         "message": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "author": {
+     "$ref": "#/$defs/contributor"
+    },
+    "coAuthors": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/contributor"
+     }
+    },
+    "packages": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "files": {
+     "type": "object",
+     "required": [
+      "count",
+      "additions",
+      "deletions",
+      "top",
+      "list"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "count": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "additions": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "deletions": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "top": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/fileDiff"
+       }
+      },
+      "list": {
+       "oneOf": [
+        {
+         "type": "null"
+        },
+        {
+         "type": "array",
+         "items": {
+          "$ref": "#/$defs/fileDiff"
+         }
+        }
+       ]
+      }
+     }
+    },
+    "references": {
+     "type": "object",
+     "required": [
+      "closes",
+      "linkedPrs",
+      "external"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "closes": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "linkedPrs": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "external": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "migration": {
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "$ref": "#/$defs/migration"
+      }
+     ]
+    },
+    "aiSummaries": {
+     "$ref": "#/$defs/aiSummaries"
+    },
+    "confidence": {
+     "type": "object",
+     "required": [
+      "category",
+      "breaking",
+      "packageMapping"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "category": {
+       "type": "number",
+       "minimum": 0,
+       "maximum": 1
+      },
+      "breaking": {
+       "type": "number",
+       "minimum": 0,
+       "maximum": 1
+      },
+      "packageMapping": {
+       "type": "number",
+       "minimum": 0,
+       "maximum": 1
+      }
+     }
+    }
+   }
+  },
+  "fileDiff": {
+   "type": "object",
+   "required": [
+    "path",
+    "additions",
+    "deletions",
+    "status"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "path": {
+     "type": "string"
+    },
+    "additions": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "deletions": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "status": {
+     "type": "string"
+    }
+   }
+  },
+  "migration": {
+   "type": "object",
+   "required": [
+    "summary",
+    "automated"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "summary": {
+     "type": "string"
+    },
+    "before": {
+     "type": "string"
+    },
+    "after": {
+     "type": "string"
+    },
+    "automated": {
+     "type": "boolean"
+    }
+   }
+  },
+  "breakingChange": {
+   "type": "object",
+   "required": [
+    "changeId",
+    "summary",
+    "impact",
+    "migration",
+    "introducedIn"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "changeId": {
+     "type": "string"
+    },
+    "packageId": {
+     "type": "string"
+    },
+    "summary": {
+     "type": "string"
+    },
+    "impact": {
+     "type": "string"
+    },
+    "migration": {
+     "$ref": "#/$defs/migration"
+    },
+    "introducedIn": {
+     "type": "string"
+    }
+   }
+  },
+  "contributor": {
+   "type": "object",
+   "required": [
+    "login",
+    "changes"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "login": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "url": {
+     "type": "string"
+    },
+    "changes": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,144 @@
+{
+ "schemaVersion": "1.0.0",
+ "id": "github:acme/sdk@v2.4.0",
+ "previousReleaseId": "github:acme/sdk@v2.3.0",
+ "metadata": {
+  "generatedAt": "2026-05-01T11:42:08Z",
+  "generator": {
+   "name": "shipnote",
+   "version": "0.1.0"
+  },
+  "determinismKey": "sha256:placeholder",
+  "sources": [
+   "git",
+   "github-prs"
+  ]
+ },
+ "repo": {
+  "provider": "github",
+  "owner": "acme",
+  "name": "sdk",
+  "url": "https://github.com/acme/sdk",
+  "defaultBranch": "main"
+ },
+ "range": {
+  "from": {
+   "ref": "v2.3.0",
+   "sha": "a1b2c3d",
+   "date": "2026-04-15T00:00:00Z"
+  },
+  "to": {
+   "ref": "HEAD",
+   "sha": "f9e8d7c",
+   "date": "2026-05-01T11:42:08Z"
+  }
+ },
+ "release": {
+  "state": "draft",
+  "name": "v2.4.0",
+  "tag": "v2.4.0",
+  "isPrerelease": false,
+  "publishedAt": null
+ },
+ "summary": {
+  "headline": "Adds OAuth device flow.",
+  "aiSummaries": {
+   "developer": null,
+   "customer": null,
+   "migration": null
+  }
+ },
+ "stats": {
+  "changes": 1,
+  "features": 1,
+  "fixes": 0,
+  "breaking": 0,
+  "deprecations": 0,
+  "perf": 0,
+  "security": 0,
+  "docs": 0,
+  "internal": 0,
+  "filesChanged": 1
+ },
+ "packages": [],
+ "globalChanges": [
+  {
+   "id": "pr-123",
+   "type": "feat",
+   "scope": "auth",
+   "breaking": false,
+   "title": "Add OAuth device flow support",
+   "description": "Implements RFC 8628.",
+   "source": {
+    "kind": "pr",
+    "adapter": "github-prs",
+    "pr": {
+     "number": 123,
+     "url": "https://github.com/acme/sdk/pull/123",
+     "mergedAt": "2026-04-22T10:14:00Z",
+     "mergeStrategy": "squash",
+     "labels": [
+      "feat",
+      "auth"
+     ]
+    },
+    "commits": [
+     {
+      "sha": "a1b2c3d",
+      "shortSha": "a1b2c3d",
+      "url": "https://github.com/acme/sdk/commit/a1b2c3d",
+      "message": "feat(auth): device flow"
+     }
+    ]
+   },
+   "author": {
+    "login": "maya",
+    "name": "Maya R.",
+    "url": "https://github.com/maya",
+    "changes": 1
+   },
+   "coAuthors": [],
+   "packages": [],
+   "files": {
+    "count": 1,
+    "additions": 120,
+    "deletions": 4,
+    "top": [
+     {
+      "path": "src/auth/device.ts",
+      "additions": 120,
+      "deletions": 4,
+      "status": "added"
+     }
+    ],
+    "list": null
+   },
+   "references": {
+    "closes": [],
+    "linkedPrs": [],
+    "external": []
+   },
+   "migration": null,
+   "aiSummaries": {
+    "developer": null,
+    "customer": null,
+    "migration": null
+   },
+   "confidence": {
+    "category": 0.95,
+    "breaking": 0.0,
+    "packageMapping": 1.0
+   }
+  }
+ ],
+ "breakingChanges": [],
+ "contributors": [
+  {
+   "login": "maya",
+   "name": "Maya R.",
+   "url": "https://github.com/maya",
+   "changes": 1
+  }
+ ],
+ "excluded": []
+}
