@@ -1,23 +1,17 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
-// errNotImplemented is returned by stub commands. It causes a non-zero exit.
-var errNotImplemented = errors.New("not implemented yet — landing in a follow-up PR")
-
 func newInitCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "init",
 		Short: "Bootstrap shipnote in the current repo.",
-		Long:  "Detects packages, writes .shipnote.toml, and adds .shipnote/ to .gitignore.",
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return errNotImplemented
-		},
+		Long:  "Detects the GitHub remote, writes .shipnote.toml, and adds .shipnote/ to .gitignore.",
+		RunE:  runInit,
 	}
 	c.Flags().Bool("yes", false, "Accept all defaults without prompting")
 	c.Flags().Bool("force", false, "Overwrite existing .shipnote.toml")
@@ -110,8 +104,6 @@ func newDoctorCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "doctor",
 		Short: "Diagnose configuration, git state, GitHub access, and detected packages.",
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return errNotImplemented
-		},
+		RunE:  runDoctor,
 	}
 }
