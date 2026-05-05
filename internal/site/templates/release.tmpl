@@ -1,0 +1,72 @@
+{{define "release"}}
+<header class="sn-release-header">
+  <h1>{{ .Release.Release.Tag }}</h1>
+  <p class="sn-meta">
+    <time datetime="{{ .Date }}">{{ .Date }}</time>
+    {{- with .Release.Stats -}}
+      <span class="sn-stats">
+        {{- if .Features }}<span class="pill pill-feat">{{ .Features }} added</span>{{ end -}}
+        {{- if .Fixes }}<span class="pill pill-fix">{{ .Fixes }} fixed</span>{{ end -}}
+        {{- if .Breaking }}<span class="pill pill-breaking">{{ .Breaking }} breaking</span>{{ end -}}
+      </span>
+    {{- end -}}
+  </p>
+  {{- if .Customer }}
+  <p class="sn-summary">{{ .Customer }}</p>
+  {{- end }}
+</header>
+
+{{- $grouped := groupedChanges .Release.GlobalChanges -}}
+{{- range categoryOrder -}}
+  {{- $items := index $grouped . -}}
+  {{- if $items }}
+<section class="sn-category sn-category-{{ . }}">
+  <h2>{{ categoryLabel . }}</h2>
+  <ul>
+    {{- range $items }}
+    <li class="sn-change{{ if .Breaking }} sn-change-breaking{{ end }}">
+      <p class="sn-change-title">
+        {{- if .Scope }}<strong>{{ .Scope }}:</strong> {{ end -}}
+        {{ .Title }}
+        {{- with .Source.PR -}}
+          {{- if and .Number .URL }} <a class="sn-pr" href="{{ .URL }}">#{{ .Number }}</a>{{ end -}}
+        {{- end -}}
+      </p>
+      {{- $customer := audienceText .AISummaries "customer" -}}
+      {{- $migration := audienceText .AISummaries "migration" -}}
+      {{- if $customer }}
+      <p class="sn-change-customer">{{ $customer }}</p>
+      {{- end }}
+      {{- if and $migration (ne $migration "No migration required.") }}
+      <details class="sn-migration">
+        <summary>Migration notes</summary>
+        <p>{{ $migration }}</p>
+      </details>
+      {{- end }}
+    </li>
+    {{- end }}
+  </ul>
+</section>
+  {{- end }}
+{{- end }}
+
+{{- with .Release.Contributors }}
+<section class="sn-contributors">
+  <h2>Contributors</h2>
+  <ul>
+    {{- range . }}
+    <li>
+      {{- if .URL -}}
+        <a href="{{ .URL }}">@{{ .Login }}</a>
+      {{- else if .Login -}}
+        @{{ .Login }}
+      {{- else -}}
+        {{ .Name }}
+      {{- end -}}
+      {{- if .Changes }} <span class="sn-change-count">— {{ .Changes }} change{{ if ne .Changes 1 }}s{{ end }}</span>{{ end -}}
+    </li>
+    {{- end }}
+  </ul>
+</section>
+{{- end }}
+{{end}}

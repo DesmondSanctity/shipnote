@@ -1,0 +1,237 @@
+:root {
+ --sn-bg: #ffffff;
+ --sn-fg: #1a1a1a;
+ --sn-muted: #6b7280;
+ --sn-border: #e5e7eb;
+ --sn-accent: #2563eb;
+ --sn-feat: #059669;
+ --sn-fix: #d97706;
+ --sn-breaking: #dc2626;
+ --sn-radius: 8px;
+ --sn-mono: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, monospace;
+ --sn-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+ :root {
+  --sn-bg: #0b0d12;
+  --sn-fg: #e6e8ee;
+  --sn-muted: #9aa3b2;
+  --sn-border: #1f242d;
+  --sn-accent: #60a5fa;
+  --sn-feat: #34d399;
+  --sn-fix: #fbbf24;
+  --sn-breaking: #f87171;
+ }
+}
+
+* {
+ box-sizing: border-box;
+}
+
+html,
+body {
+ margin: 0;
+ padding: 0;
+ background: var(--sn-bg);
+ color: var(--sn-fg);
+ font-family: var(--sn-sans);
+ line-height: 1.55;
+}
+
+a {
+ color: var(--sn-accent);
+ text-decoration: none;
+}
+a:hover {
+ text-decoration: underline;
+}
+
+.sn-header {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ padding: 1rem 2rem;
+ border-bottom: 1px solid var(--sn-border);
+ position: sticky;
+ top: 0;
+ background: var(--sn-bg);
+ z-index: 5;
+}
+.sn-brand {
+ font-family: var(--sn-mono);
+ font-weight: 600;
+}
+.sn-feeds a {
+ margin-left: 1rem;
+ font-size: 0.85rem;
+ color: var(--sn-muted);
+}
+
+.sn-layout {
+ display: grid;
+ grid-template-columns: 240px 1fr;
+ gap: 2rem;
+ max-width: 1100px;
+ margin: 2rem auto;
+ padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+ .sn-layout {
+  grid-template-columns: 1fr;
+ }
+}
+
+.sn-sidebar h2 {
+ font-size: 0.75rem;
+ text-transform: uppercase;
+ letter-spacing: 0.05em;
+ color: var(--sn-muted);
+ margin: 0 0 0.5rem;
+}
+.sn-sidebar ul {
+ list-style: none;
+ padding: 0;
+ margin: 0;
+}
+.sn-sidebar li {
+ padding: 0.35rem 0.6rem;
+ border-radius: var(--sn-radius);
+}
+.sn-sidebar li.active {
+ background: rgba(37, 99, 235, 0.08);
+}
+.sn-sidebar a {
+ display: flex;
+ justify-content: space-between;
+ color: var(--sn-fg);
+}
+.sn-sidebar .sn-tag {
+ font-family: var(--sn-mono);
+ font-weight: 600;
+}
+.sn-sidebar .sn-date {
+ color: var(--sn-muted);
+ font-size: 0.8rem;
+}
+
+.sn-release-header h1 {
+ font-family: var(--sn-mono);
+ font-size: 2rem;
+ margin: 0 0 0.25rem;
+}
+.sn-meta {
+ display: flex;
+ align-items: center;
+ gap: 1rem;
+ color: var(--sn-muted);
+ margin: 0 0 1rem;
+}
+.sn-stats {
+ display: flex;
+ gap: 0.5rem;
+}
+.pill {
+ padding: 0.15rem 0.6rem;
+ border-radius: 999px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ border: 1px solid var(--sn-border);
+}
+.pill-feat {
+ color: var(--sn-feat);
+}
+.pill-fix {
+ color: var(--sn-fix);
+}
+.pill-breaking {
+ color: var(--sn-breaking);
+ border-color: var(--sn-breaking);
+}
+
+.sn-summary {
+ font-size: 1.1rem;
+ border-left: 3px solid var(--sn-accent);
+ padding: 0.5rem 0 0.5rem 1rem;
+ margin: 1rem 0 2rem;
+ color: var(--sn-fg);
+}
+
+.sn-category {
+ margin-top: 2rem;
+}
+.sn-category h2 {
+ font-size: 1rem;
+ text-transform: uppercase;
+ letter-spacing: 0.05em;
+ color: var(--sn-muted);
+ margin-bottom: 0.5rem;
+}
+.sn-category ul {
+ list-style: none;
+ padding: 0;
+ margin: 0;
+}
+.sn-change {
+ border-bottom: 1px solid var(--sn-border);
+ padding: 0.75rem 0;
+}
+.sn-change:last-child {
+ border-bottom: 0;
+}
+.sn-change-title {
+ margin: 0;
+ font-weight: 500;
+}
+.sn-change-customer {
+ margin: 0.25rem 0 0;
+ color: var(--sn-muted);
+ font-size: 0.95rem;
+}
+.sn-pr {
+ font-family: var(--sn-mono);
+ font-size: 0.85rem;
+ margin-left: 0.5rem;
+}
+.sn-change-breaking .sn-change-title::before {
+ content: 'BREAKING';
+ background: var(--sn-breaking);
+ color: white;
+ font-size: 0.65rem;
+ padding: 0.1rem 0.4rem;
+ border-radius: 4px;
+ margin-right: 0.5rem;
+ letter-spacing: 0.05em;
+}
+.sn-migration {
+ margin-top: 0.5rem;
+ font-size: 0.9rem;
+ color: var(--sn-muted);
+}
+.sn-migration summary {
+ cursor: pointer;
+}
+
+.sn-contributors {
+ margin-top: 3rem;
+}
+.sn-contributors ul {
+ list-style: none;
+ padding: 0;
+ margin: 0;
+ display: flex;
+ flex-wrap: wrap;
+ gap: 0.5rem 1rem;
+}
+.sn-change-count {
+ color: var(--sn-muted);
+ font-size: 0.85rem;
+}
+
+.sn-footer {
+ text-align: center;
+ padding: 3rem 1rem;
+ color: var(--sn-muted);
+ font-size: 0.85rem;
+}

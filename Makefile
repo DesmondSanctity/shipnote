@@ -21,7 +21,7 @@ LDFLAGS := -s -w \
 	-X $(PKG_VERSION).Commit=$(COMMIT) \
 	-X $(PKG_VERSION).Date=$(DATE)
 
-.PHONY: all build test lint fmt vet tidy clean run golden help
+.PHONY: all build test lint fmt vet tidy clean run golden casts help
 
 all: lint test build
 
@@ -56,6 +56,17 @@ run: build ## Build then run with arguments: `make run ARGS="--help"`
 
 clean: ## Remove build artifacts
 	rm -rf bin dist
+
+casts: ## Render docs/casts/*.cast → docs/img/*.gif via agg
+	@command -v agg >/dev/null 2>&1 || { \
+		echo "agg not installed. See https://github.com/asciinema/agg"; exit 1; }
+	@mkdir -p docs/img
+	@for cast in docs/casts/*.cast; do \
+		[ -e "$$cast" ] || { echo "no .cast files in docs/casts/"; exit 0; }; \
+		name=$$(basename "$$cast" .cast); \
+		echo "agg $$cast -> docs/img/$$name.gif"; \
+		agg --cols 100 --rows 25 "$$cast" "docs/img/$$name.gif"; \
+	done
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
