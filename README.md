@@ -37,13 +37,13 @@ Add `--ai` to enrich `release.json` with audience-keyed prose (developer, custom
 
 ### Quick start by provider
 
-| Provider  | `--ai-provider`    | Auth                                                                       | Default model             | Notes                                             |
-| --------- | ------------------ | -------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------- |
-| Ollama    | `ollama`           | none (local)                                                               | `llama3.2:1b`             | Reads `OLLAMA_HOST` (default `localhost:11434`).  |
-| OpenAI    | `openai`           | `OPENAI_API_KEY` env or `--ai-key`                                         | `gpt-4o-mini`             | Hosted.                                           |
-| Anthropic | `anthropic`        | `ANTHROPIC_API_KEY` env or `--ai-key`                                      | `claude-3-5-haiku-latest` | Native Messages API.                              |
-| Groq      | `groq`             | `GROQ_API_KEY` env or `--ai-key`                                           | `llama-3.1-8b-instant`    | Hosted, fast free tier.                           |
-| Custom    | `custom`           | `--ai-key` (if endpoint requires it)                                       | none — set `--ai-model`   | Any OpenAI-compatible `/v1/chat/completions` API. |
+| Provider  | `--ai-provider`    | Auth                                                                        | Default model             | Notes                                             |
+| --------- | ------------------ | --------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------- |
+| Ollama    | `ollama`           | none (local)                                                                | `llama3.2:1b`             | Reads `OLLAMA_HOST` (default `localhost:11434`).  |
+| OpenAI    | `openai`           | `OPENAI_API_KEY` env or `--ai-key`                                          | `gpt-4o-mini`             | Hosted.                                           |
+| Anthropic | `anthropic`        | `ANTHROPIC_API_KEY` env or `--ai-key`                                       | `claude-3-5-haiku-latest` | Native Messages API.                              |
+| Groq      | `groq`             | `GROQ_API_KEY` env or `--ai-key`                                            | `llama-3.1-8b-instant`    | Hosted, fast free tier.                           |
+| Custom    | `custom`           | `--ai-key` (if endpoint requires it)                                        | none — set `--ai-model`   | Any OpenAI-compatible `/v1/chat/completions` API. |
 | Auto      | `auto` _(default)_ | first of `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GROQ_API_KEY`, then Ollama | provider default          | Zero-config: pick whatever's available.           |
 
 ### Examples
@@ -95,13 +95,13 @@ shipnote generate --ai \
 
 ### All AI flags
 
-| Flag            | Purpose                                                 |
-| --------------- | ------------------------------------------------------- |
-| `--ai`          | Enable AI enrichment.                                   |
-| `--ai-provider`  | `auto` (default), `openai`, `anthropic`, `groq`, `ollama`, `custom`. |
-| `--ai-model`    | Override the provider's default model.                  |
-| `--ai-base-url` | Override base URL (mainly for `custom`).                |
-| `--ai-key`      | API key. Falls back to provider's env var.              |
+| Flag            | Purpose                                                              |
+| --------------- | -------------------------------------------------------------------- |
+| `--ai`          | Enable AI enrichment.                                                |
+| `--ai-provider` | `auto` (default), `openai`, `anthropic`, `groq`, `ollama`, `custom`. |
+| `--ai-model`    | Override the provider's default model.                               |
+| `--ai-base-url` | Override base URL (mainly for `custom`).                             |
+| `--ai-key`      | API key. Falls back to provider's env var.                           |
 
 ### Caching & determinism
 
@@ -118,7 +118,7 @@ See [docs/ai.md](docs/ai.md) for the JSON output schema.
 - Deterministic output, `--check` mode for CI
 - **Optional** audience-aware AI summaries (OpenAI, Anthropic, Groq, Ollama, custom)
 
-Out of scope until later versions: monorepo support, GitHub Action, web dashboard. See [docs/roadmap.md](docs/roadmap.md) once published.
+Out of scope until later versions: monorepo support, GitHub Action, web dashboard. See [docs/roadmap.md](docs/roadmap.md) for the full plan.
 
 ## License
 
