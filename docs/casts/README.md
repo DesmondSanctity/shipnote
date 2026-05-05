@@ -22,12 +22,12 @@ make casts        # requires `agg` — brew install agg
 
 ## Files
 
-| Cast | GIF | Purpose |
-| --- | --- | --- |
-| `demo.cast` | `docs/img/demo.gif` | Hero GIF for the README + social announcements. |
-| `init.cast` | `docs/img/init.gif` | `shipnote init` flow. |
+| Cast            | GIF                     | Purpose                                                          |
+| --------------- | ----------------------- | ---------------------------------------------------------------- |
+| `demo.cast`     | `docs/img/demo.gif`     | Hero GIF for the README + social announcements.                  |
+| `init.cast`     | `docs/img/init.gif`     | `shipnote init` flow.                                            |
 | `generate.cast` | `docs/img/generate.gif` | `shipnote generate --ai` + a peek at the resulting CHANGELOG.md. |
-| `site.cast` | `docs/img/site.gif` | `shipnote site` flow + output layout. |
+| `site.cast`     | `docs/img/site.gif`     | `shipnote site` flow + output layout.                            |
 
 ## Posting on socials
 
