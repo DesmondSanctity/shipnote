@@ -1,0 +1,51 @@
+version: '2'
+
+run:
+ timeout: 5m
+ modules-download-mode: readonly
+
+linters:
+ default: none
+ enable:
+  - errcheck
+  - govet
+  - ineffassign
+  - staticcheck
+  - unused
+  - gocritic
+  - revive
+  - misspell
+  - depguard
+  - gofumpt
+
+ settings:
+  depguard:
+   rules:
+    # Forbid outbound network packages outside the two allowed islands
+    # (internal/collect/github and internal/ai). Enforced by listing
+    # forbidden imports here; allowed packages add an explicit override.
+    forbid-network-outside-allowed:
+     list-mode: lax
+     files:
+      - '!**/internal/collect/github/**'
+      - '!**/internal/ai/**'
+      - '!**/cmd/shipnote/cli/**'
+     deny:
+      - pkg: 'net/http'
+        desc: 'Outbound HTTP only allowed in internal/collect/github and internal/ai. Move the call there or open an ADR.'
+      - pkg: 'github.com/cli/go-gh'
+        desc: 'Use internal/collect/github wrappers instead.'
+
+ exclusions:
+  rules:
+   # Tests may use anything for fixtures.
+   - path: _test\.go
+     linters: [depguard]
+
+issues:
+ max-issues-per-linter: 0
+ max-same-issues: 0
+
+formatters:
+ enable:
+  - gofumpt

@@ -1,0 +1,48 @@
+name: Bug report
+description: Something is wrong with shipnote.
+labels: ['bug', 'triage']
+body:
+ - type: textarea
+   id: what-happened
+   attributes:
+    label: What happened?
+    description: A clear description of the bug.
+   validations:
+    required: true
+ - type: textarea
+   id: expected
+   attributes:
+    label: What did you expect to happen?
+   validations:
+    required: true
+ - type: textarea
+   id: repro
+   attributes:
+    label: Reproduction
+    description: Minimal steps. A public repo + exact command line is ideal.
+    placeholder: |
+     1. `git clone ...`
+     2. `shipnote generate --from v1.0.0 --to v1.1.0`
+     3. ...
+   validations:
+    required: true
+ - type: input
+   id: version
+   attributes:
+    label: shipnote version
+    description: Output of `shipnote --version`
+   validations:
+    required: true
+ - type: input
+   id: os
+   attributes:
+    label: OS / arch
+    placeholder: macOS 14 arm64
+   validations:
+    required: true
+ - type: textarea
+   id: logs
+   attributes:
+    label: Logs
+    description: Output with `--debug` if available.
+    render: shell

@@ -1,0 +1,88 @@
+version: 2
+
+project_name: shipnote
+
+before:
+ hooks:
+  - go mod tidy
+
+builds:
+ - id: shipnote
+   main: ./cmd/shipnote
+   binary: shipnote
+   env:
+    - CGO_ENABLED=0
+   flags:
+    - -trimpath
+   ldflags:
+    - -s -w
+    - -X github.com/DesmondSanctity/shipnote/internal/version.Version={{.Version}}
+    - -X github.com/DesmondSanctity/shipnote/internal/version.Commit={{.FullCommit}}
+    - -X github.com/DesmondSanctity/shipnote/internal/version.Date={{.CommitDate}}
+   goos:
+    - darwin
+    - linux
+   goarch:
+    - amd64
+    - arm64
+   mod_timestamp: '{{ .CommitTimestamp }}'
+
+archives:
+ - id: default
+   name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+   formats: [tar.gz]
+   files:
+    - LICENSE
+    - NOTICE
+    - README.md
+
+checksum:
+ name_template: 'checksums.txt'
+ algorithm: sha256
+
+snapshot:
+ version_template: '{{ .Tag }}-next'
+
+changelog:
+ disable: true # we eat our own dog food once v0.1 generates real notes
+
+release:
+ github:
+  owner: DesmondSanctity
+  name: shipnote
+ draft: true
+ prerelease: auto
+
+dockers:
+ - image_templates:
+    - 'ghcr.io/desmondsanctity/shipnote:{{ .Version }}-amd64'
+   use: buildx
+   goarch: amd64
+   dockerfile: Dockerfile
+   build_flag_templates:
+    - '--platform=linux/amd64'
+    - '--label=org.opencontainers.image.source=https://github.com/DesmondSanctity/shipnote'
+    - '--label=org.opencontainers.image.licenses=Apache-2.0'
+    - '--label=org.opencontainers.image.version={{ .Version }}'
+    - '--label=org.opencontainers.image.revision={{ .FullCommit }}'
+ - image_templates:
+    - 'ghcr.io/desmondsanctity/shipnote:{{ .Version }}-arm64'
+   use: buildx
+   goarch: arm64
+   dockerfile: Dockerfile
+   build_flag_templates:
+    - '--platform=linux/arm64'
+    - '--label=org.opencontainers.image.source=https://github.com/DesmondSanctity/shipnote'
+    - '--label=org.opencontainers.image.licenses=Apache-2.0'
+    - '--label=org.opencontainers.image.version={{ .Version }}'
+    - '--label=org.opencontainers.image.revision={{ .FullCommit }}'
+
+docker_manifests:
+ - name_template: 'ghcr.io/desmondsanctity/shipnote:{{ .Version }}'
+   image_templates:
+    - 'ghcr.io/desmondsanctity/shipnote:{{ .Version }}-amd64'
+    - 'ghcr.io/desmondsanctity/shipnote:{{ .Version }}-arm64'
+ - name_template: 'ghcr.io/desmondsanctity/shipnote:latest'
+   image_templates:
+    - 'ghcr.io/desmondsanctity/shipnote:{{ .Version }}-amd64'
+    - 'ghcr.io/desmondsanctity/shipnote:{{ .Version }}-arm64'
