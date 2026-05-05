@@ -1,13 +1,8 @@
 # shipnote
 
-```
-       _     _                   _
-   ___| |__ (_)_ __  _ __   ___ | |_ ___
-  / __| '_ \| | '_ \| '_ \ / _ \| __/ _ \
-  \__ \ | | | | |_) | | | | (_) | ||  __/
-  |___/_| |_|_| .__/|_| |_|\___/ \__\___|
-              |_|  release intelligence
-```
+<p align="center">
+  <img src="docs/img/demo.gif" alt="shipnote demo" width="720">
+</p>
 
 > Release intelligence for SDK and developer-platform teams. CLI-first, CI-native, OSS.
 
@@ -148,11 +143,13 @@ Drop two lines into any page and you have a "What's new" panel that pulls from t
 
 ```html
 <div id="shipnote"></div>
-<script src="https://acme.com/changelog/assets/widget.js"
-        data-feed="https://acme.com/changelog/feed.json"
-        data-mount="#shipnote"
-        data-limit="5"
-        data-audience="customer"></script>
+<script
+ src="https://acme.com/changelog/assets/widget.js"
+ data-feed="https://acme.com/changelog/feed.json"
+ data-mount="#shipnote"
+ data-limit="5"
+ data-audience="customer"
+></script>
 ```
 
 The widget is dependency-free vanilla JS, ~3 KB, and renders the latest N releases with stats pills and customer summaries. Pass `data-stylesheet="..."` to override the default styles, or `data-audience="developer"` for engineering-facing copy.
@@ -172,3 +169,12 @@ Out of scope until later versions: monorepo support, GitHub Action. See [docs/ro
 ## License
 
 [Apache-2.0](LICENSE).
+
+```
+       _     _                   _
+   ___| |__ (_)_ __  _ __   ___ | |_ ___
+  / __| '_ \| | '_ \| '_ \ / _ \| __/ _ \
+  \__ \ | | | | |_) | | | | (_) | ||  __/
+  |___/_| |_|_| .__/|_| |_|\___/ \__\___|
+              |_|  release intelligence
+```

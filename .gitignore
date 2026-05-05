@@ -16,3 +16,7 @@ coverage.txt
 
 # shipnote runtime cache
 .shipnote/
+
+# Generated demo casts (rebuild via `python3 docs/casts/build.py`).
+# The rendered GIFs in docs/img/ ARE checked in — the README links them.
+docs/casts/*.cast
