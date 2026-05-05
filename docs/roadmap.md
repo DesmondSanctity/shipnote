@@ -16,6 +16,7 @@ End-to-end usable on a single repo.
 - ✅ Deterministic output, `--check` drift mode
 - ✅ Optional AI summaries: OpenAI, Anthropic, Groq, Ollama, custom OpenAI-compatible — see [docs/ai.md](ai.md)
 - ✅ On-disk AI cache, prompt-version pinning
+- ✅ Static public changelog site (`shipnote site`) with multi-version pages, JSON Feed 1.1, Atom feed, and an embeddable widget
 
 **Exit gate:** clean release notes for two real OSS repos and our own; byte-deterministic across re-runs.
 
@@ -73,8 +74,8 @@ Schema and CLI surface stability commitment.
 
 These are tracked separately from the OSS milestones:
 
-- **Cloud** — hosted ingestion, public changelog page per project, search across versions, diff-between-versions UI, org dashboards. Treated as a separate product that consumes `release.json`.
-- **Chat / intelligence** — search-grounded Q&A over normalized releases, version-aware comparisons, per-customer migration guides, RSS / webhook delivery.
+- **Hosted dashboard (maybe)** — search across versions, diff-between-versions UI, org dashboards. The static `shipnote site` already covers public changelog hosting; a hosted product is only on the table if there's clear demand for the cross-version search and analytics layers.
+- **Chat / intelligence** — search-grounded Q&A over normalized releases, version-aware comparisons, per-customer migration guides, webhook delivery.
 - **Beyond GitHub** — GitLab, Bitbucket, Gitea, self-hosted git hosts.
 
 ## Cross-cutting tracks

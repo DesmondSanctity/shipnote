@@ -1,5 +1,14 @@
 # shipnote
 
+```
+       _     _                   _
+   ___| |__ (_)_ __  _ __   ___ | |_ ___
+  / __| '_ \| | '_ \| '_ \ / _ \| __/ _ \
+  \__ \ | | | | |_) | | | | (_) | ||  __/
+  |___/_| |_|_| .__/|_| |_|\___/ \__\___|
+              |_|  release intelligence
+```
+
 > Release intelligence for SDK and developer-platform teams. CLI-first, CI-native, OSS.
 
 **shipnote** turns your repository's PRs, labels, tags, and monorepo structure into deterministic, audience-targeted release notes you can trust in CI. Optional AI polish runs locally — never required.
@@ -109,6 +118,45 @@ Results are cached at `.shipnote/cache/ai/<aa>/<sha256>.json` keyed by provider,
 
 See [docs/ai.md](docs/ai.md) for the JSON output schema.
 
+## Public changelog page
+
+`shipnote site` builds a static, multi-version HTML changelog you can drop on any host (GitHub Pages, S3, Netlify, Cloudflare Pages):
+
+```sh
+shipnote site public/changelog \
+  --site-url https://acme.com/changelog \
+  --site-title "Acme changelog"
+```
+
+The output is self-contained and idempotent — re-running with the same input produces byte-identical files:
+
+```
+public/changelog/
+  index.html              # latest release + sidebar of every version
+  v0.2.0/index.html       # one page per release
+  v0.1.0/index.html
+  feed.json               # JSON Feed 1.1 (with a _shipnote vendor extension)
+  feed.xml                # Atom feed for RSS readers
+  releases.json           # internal index — keep in source control
+  assets/site.css
+  assets/widget.js
+```
+
+### Embed on your site
+
+Drop two lines into any page and you have a "What's new" panel that pulls from the JSON Feed:
+
+```html
+<div id="shipnote"></div>
+<script src="https://acme.com/changelog/assets/widget.js"
+        data-feed="https://acme.com/changelog/feed.json"
+        data-mount="#shipnote"
+        data-limit="5"
+        data-audience="customer"></script>
+```
+
+The widget is dependency-free vanilla JS, ~3 KB, and renders the latest N releases with stats pills and customer summaries. Pass `data-stylesheet="..."` to override the default styles, or `data-audience="developer"` for engineering-facing copy.
+
 ## What's in the box (v0.1)
 
 - `git` + `github-prs` source adapters with PR/commit dedup
@@ -117,8 +165,9 @@ See [docs/ai.md](docs/ai.md) for the JSON output schema.
 - Markdown + JSON renderers, schema v1.0.0
 - Deterministic output, `--check` mode for CI
 - **Optional** audience-aware AI summaries (OpenAI, Anthropic, Groq, Ollama, custom)
+- Static **public changelog site** + JSON Feed / Atom + embeddable widget
 
-Out of scope until later versions: monorepo support, GitHub Action, web dashboard. See [docs/roadmap.md](docs/roadmap.md) for the full plan.
+Out of scope until later versions: monorepo support, GitHub Action. See [docs/roadmap.md](docs/roadmap.md) for the full plan.
 
 ## License
 
