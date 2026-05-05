@@ -6,28 +6,28 @@ This doc covers the wire-level details: providers, models, output schema, cachin
 
 ## Why audience-keyed summaries?
 
-PR links work for public repos. They don't work for **private repos with public consumers** (a private SDK that ships a public changelog page, an internal product whose `release.json` is mirrored to docs). For those teams the JSON output needs to *explain* what changed without the reader having to follow a link they can't open.
+PR links work for public repos. They don't work for **private repos with public consumers** (a private SDK that ships a public changelog page, an internal product whose `release.json` is mirrored to docs). For those teams the JSON output needs to _explain_ what changed without the reader having to follow a link they can't open.
 
 Three audiences are produced for each scope (release, change):
 
-| Audience    | Voice                          | Length cap | Purpose                                         |
-| ----------- | ------------------------------ | ---------- | ----------------------------------------------- |
-| `developer` | Direct, technical              | ~30 words  | Inline release notes for engineers.             |
-| `customer`  | Plain language, benefit-first  | ~30 words  | Public changelog / blog post / email digest.    |
-| `migration` | Imperative, action-oriented    | ~60 words  | Upgrade guides; `"No migration required."` when no breaking change is present. |
+| Audience    | Voice                         | Length cap | Purpose                                                                        |
+| ----------- | ----------------------------- | ---------- | ------------------------------------------------------------------------------ |
+| `developer` | Direct, technical             | ~30 words  | Inline release notes for engineers.                                            |
+| `customer`  | Plain language, benefit-first | ~30 words  | Public changelog / blog post / email digest.                                   |
+| `migration` | Imperative, action-oriented   | ~60 words  | Upgrade guides; `"No migration required."` when no breaking change is present. |
 
 Length caps are enforced in the prompt, not post-processed.
 
 ## Providers
 
-| Provider  | `--ai-provider` | Wire format                | Auth                     | Default model              |
-| --------- | --------------- | -------------------------- | ------------------------ | -------------------------- |
-| Ollama    | `ollama`        | OpenAI `/v1` compat        | none (local)             | `llama3.2:1b`              |
-| OpenAI    | `openai`        | OpenAI `/v1`               | `OPENAI_API_KEY`         | `gpt-4o-mini`              |
-| Anthropic | `anthropic`     | Anthropic `/v1/messages`   | `ANTHROPIC_API_KEY`      | `claude-3-5-haiku-latest`  |
-| Groq      | `groq`          | OpenAI `/v1`               | `GROQ_API_KEY`           | `llama-3.1-8b-instant`     |
-| Custom    | `custom`        | OpenAI `/v1` compat        | optional `--ai-key`      | none — set `--ai-model`    |
-| Auto      | `auto`          | first matching from above  | first available env var  | provider default           |
+| Provider  | `--ai-provider` | Wire format               | Auth                    | Default model             |
+| --------- | --------------- | ------------------------- | ----------------------- | ------------------------- |
+| Ollama    | `ollama`        | OpenAI `/v1` compat       | none (local)            | `llama3.2:1b`             |
+| OpenAI    | `openai`        | OpenAI `/v1`              | `OPENAI_API_KEY`        | `gpt-4o-mini`             |
+| Anthropic | `anthropic`     | Anthropic `/v1/messages`  | `ANTHROPIC_API_KEY`     | `claude-3-5-haiku-latest` |
+| Groq      | `groq`          | OpenAI `/v1`              | `GROQ_API_KEY`          | `llama-3.1-8b-instant`    |
+| Custom    | `custom`        | OpenAI `/v1` compat       | optional `--ai-key`     | none — set `--ai-model`   |
+| Auto      | `auto`          | first matching from above | first available env var | provider default          |
 
 Auto-detect chain: `OPENAI_API_KEY` → `ANTHROPIC_API_KEY` → `GROQ_API_KEY` → local Ollama at `OLLAMA_HOST` (default `localhost:11434`).
 
@@ -49,44 +49,48 @@ Each `Change` and the top-level `Summary` gain an `aiSummaries` block.
 
 ```json
 {
-  "schemaVersion": "1.0.0",
-  "tag": "v0.2.0",
-  "date": "2026-05-05",
-  "summary": {
-    "headline": "...",
-    "aiSummaries": {
-      "developer": {
-        "text": "...",
-        "model": "claude-3-5-haiku-latest",
-        "promptVersion": "v1"
-      },
-      "customer":  { "text": "...", "model": "...", "promptVersion": "v1" },
-      "migration": { "text": "No migration required.", "model": "...", "promptVersion": "v1" }
-    }
-  },
-  "globalChanges": [
-    {
-      "type": "feat",
-      "title": "...",
-      "pr": { "number": 42, "url": "https://github.com/owner/repo/pull/42" },
-      "aiSummaries": {
-        "developer": { "text": "...", "model": "...", "promptVersion": "v1" },
-        "customer":  { "text": "...", "model": "...", "promptVersion": "v1" },
-        "migration": { "text": "...", "model": "...", "promptVersion": "v1" }
-      }
-    }
-  ]
+ "schemaVersion": "1.0.0",
+ "tag": "v0.2.0",
+ "date": "2026-05-05",
+ "summary": {
+  "headline": "...",
+  "aiSummaries": {
+   "developer": {
+    "text": "...",
+    "model": "claude-3-5-haiku-latest",
+    "promptVersion": "v1"
+   },
+   "customer": { "text": "...", "model": "...", "promptVersion": "v1" },
+   "migration": {
+    "text": "No migration required.",
+    "model": "...",
+    "promptVersion": "v1"
+   }
+  }
+ },
+ "globalChanges": [
+  {
+   "type": "feat",
+   "title": "...",
+   "pr": { "number": 42, "url": "https://github.com/owner/repo/pull/42" },
+   "aiSummaries": {
+    "developer": { "text": "...", "model": "...", "promptVersion": "v1" },
+    "customer": { "text": "...", "model": "...", "promptVersion": "v1" },
+    "migration": { "text": "...", "model": "...", "promptVersion": "v1" }
+   }
+  }
+ ]
 }
 ```
 
 ### Field reference
 
-| Path                                 | Type   | Meaning                                                                |
-| ------------------------------------ | ------ | ---------------------------------------------------------------------- |
-| `aiSummaries.<audience>`             | object \| null | `null` means AI was off or that audience wasn't generated.       |
-| `aiSummaries.<audience>.text`        | string | Prose summary. May be empty string if the model returned nothing usable. |
-| `aiSummaries.<audience>.model`       | string | Exact model id reported by the provider — audit trail.                 |
-| `aiSummaries.<audience>.promptVersion` | string | `"v1"` today. Bumps when prompts change.                             |
+| Path                                   | Type           | Meaning                                                                  |
+| -------------------------------------- | -------------- | ------------------------------------------------------------------------ |
+| `aiSummaries.<audience>`               | object \| null | `null` means AI was off or that audience wasn't generated.               |
+| `aiSummaries.<audience>.text`          | string         | Prose summary. May be empty string if the model returned nothing usable. |
+| `aiSummaries.<audience>.model`         | string         | Exact model id reported by the provider — audit trail.                   |
+| `aiSummaries.<audience>.promptVersion` | string         | `"v1"` today. Bumps when prompts change.                                 |
 
 Consumers should treat any `aiSummaries.*` block as **advisory**. The deterministic Markdown body and the structural fields (`type`, `title`, `pr`, etc.) are the source of truth.
 
@@ -140,30 +144,30 @@ This means:
 
 ## Failure modes
 
-| Symptom                                       | Cause                                                       | Action                                                       |
-| --------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------ |
-| `shipnote: --ai-provider=X requires Y` on stderr | Missing API key for explicit provider.                    | Export the env var or pass `--ai-key`.                        |
-| AI fields are `null` in JSON                   | Provider returned an error or `Available()` returned false. | Check stderr; the deterministic Markdown still shipped.       |
-| Cache files growing unbounded                  | Long history of prompt edits.                               | Safe to `rm -rf .shipnote/cache/ai`; will repopulate.         |
-| Same release, different AI text run-to-run    | Cold cache + non-deterministic provider.                    | Commit the cache to CI artifacts, or use a stable provider.   |
+| Symptom                                          | Cause                                                       | Action                                                      |
+| ------------------------------------------------ | ----------------------------------------------------------- | ----------------------------------------------------------- |
+| `shipnote: --ai-provider=X requires Y` on stderr | Missing API key for explicit provider.                      | Export the env var or pass `--ai-key`.                      |
+| AI fields are `null` in JSON                     | Provider returned an error or `Available()` returned false. | Check stderr; the deterministic Markdown still shipped.     |
+| Cache files growing unbounded                    | Long history of prompt edits.                               | Safe to `rm -rf .shipnote/cache/ai`; will repopulate.       |
+| Same release, different AI text run-to-run       | Cold cache + non-deterministic provider.                    | Commit the cache to CI artifacts, or use a stable provider. |
 
 ## CI usage
 
 ```yaml
 - name: Generate release notes
   env:
-    GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+   GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
   run: |
-    shipnote generate \
-      --from $LAST_TAG \
-      --to ${{ github.sha }} \
-      --ai --ai-provider groq
+   shipnote generate \
+     --from $LAST_TAG \
+     --to ${{ github.sha }} \
+     --ai --ai-provider groq
 
 - name: Upload release.json
   uses: actions/upload-artifact@v4
   with:
-    name: release-json
-    path: .shipnote/release.json
+   name: release-json
+   path: .shipnote/release.json
 ```
 
 Cache the `.shipnote/cache/ai/` directory between runs to keep AI calls near-free.
