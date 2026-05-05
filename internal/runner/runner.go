@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/DesmondSanctity/shipnote/internal/ai"
 	"github.com/DesmondSanctity/shipnote/internal/analyze"
 	"github.com/DesmondSanctity/shipnote/internal/collect/github"
 	"github.com/DesmondSanctity/shipnote/internal/config"
@@ -32,6 +33,13 @@ type Inputs struct {
 	CacheDir  string        // GitHub response cache; empty disables
 	NoNetwork bool          // skip GitHub call (git-only fallback)
 	Endpoint  string        // GraphQL endpoint override; empty = api.github.com (test hook)
+
+	// AI is optional; when AIProvider is nil the pipeline is the
+	// deterministic baseline (Markdown identical to AI-off runs).
+	AIProvider  ai.Summarizer
+	AICache     *ai.Cache
+	AIAudiences []ai.Audience
+	AILogger    func(msg string)
 }
 
 // Outputs is what Run produces. Markdown / JSON are byte-identical
@@ -98,6 +106,17 @@ func Run(ctx context.Context, in Inputs) (Outputs, error) {
 	rel.Release.State = model.ReleaseStateUnreleased
 
 	md := renderMarkdown(rel)
+	// AI runs AFTER the deterministic Markdown is captured so that
+	// disabling AI cannot alter the canonical changelog body. JSON
+	// below picks up the populated AISummaries.
+	if in.AIProvider != nil {
+		_ = ai.Enrich(ctx, &rel, ai.Options{
+			Provider:  in.AIProvider,
+			Cache:     in.AICache,
+			Audiences: in.AIAudiences,
+			Logger:    in.AILogger,
+		})
+	}
 	js, err := renderJSON(rel)
 	if err != nil {
 		return Outputs{}, fmt.Errorf("render json: %w", err)
