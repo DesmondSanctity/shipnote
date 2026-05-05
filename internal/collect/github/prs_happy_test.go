@@ -24,6 +24,9 @@ func TestPRsForCommitsHappyPath(t *testing.T) {
 	if prs[0].Number != 42 || prs[0].Title != "feat: x" || prs[0].MergeCommit != "merge1" {
 		t.Errorf("pr[0] wrong: %+v", prs[0])
 	}
+	if prs[0].MergeStrategy != github.MergeStrategyMerge {
+		t.Errorf("merge strategy = %s, want merge", prs[0].MergeStrategy)
+	}
 	if prs[0].Author.Login != "maya" || prs[0].Author.IsBot {
 		t.Errorf("author wrong: %+v", prs[0].Author)
 	}

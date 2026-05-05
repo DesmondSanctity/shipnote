@@ -22,6 +22,7 @@ type Options struct {
 	UserAgent  string
 	HTTPClient *http.Client
 	Timeout    time.Duration // per-request timeout; default 30s
+	Cache      Cache         // optional response cache; nil disables caching
 }
 
 // Client talks to a GitHub-compatible GraphQL (and REST, when needed)
@@ -31,6 +32,7 @@ type Client struct {
 	token     string
 	userAgent string
 	hc        *http.Client
+	cache     Cache
 }
 
 // New constructs a Client from Options, applying defaults.
@@ -51,11 +53,16 @@ func New(opts Options) *Client {
 	if hc == nil {
 		hc = &http.Client{Timeout: timeout}
 	}
+	cache := opts.Cache
+	if cache == nil {
+		cache = nopCache{}
+	}
 	return &Client{
 		endpoint:  endpoint,
 		token:     strings.TrimSpace(opts.Token),
 		userAgent: ua,
 		hc:        hc,
+		cache:     cache,
 	}
 }
 

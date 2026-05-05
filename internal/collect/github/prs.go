@@ -56,7 +56,7 @@ func (c *Client) PRsForCommits(ctx context.Context, owner, name string, shas []s
 const commitFragment = `oid associatedPullRequests(first:1, orderBy:{field:UPDATED_AT, direction:DESC}) {
 	nodes {
 		number title body url state mergedAt baseRefName headRefName
-		mergeCommit { oid }
+		mergeCommit { oid parents(first: 3) { nodes { oid } } }
 		author { login url avatarUrl __typename ... on User { name } }
 		labels(first: 50) { nodes { name color } }
 		files(first: 100) {
@@ -82,7 +82,12 @@ type prNode struct {
 	BaseRefName string `json:"baseRefName"`
 	HeadRefName string `json:"headRefName"`
 	MergeCommit *struct {
-		OID string `json:"oid"`
+		OID     string `json:"oid"`
+		Parents struct {
+			Nodes []struct {
+				OID string `json:"oid"`
+			} `json:"nodes"`
+		} `json:"parents"`
 	} `json:"mergeCommit"`
 	Author *struct {
 		Login     string `json:"login"`
@@ -121,6 +126,9 @@ func (n prNode) toPR() PR {
 	}
 	if n.MergeCommit != nil {
 		pr.MergeCommit = n.MergeCommit.OID
+		pr.MergeStrategy = detectMergeStrategy(len(n.MergeCommit.Parents.Nodes), n.State)
+	} else if strings.EqualFold(n.State, "MERGED") {
+		pr.MergeStrategy = MergeStrategyUnknown
 	}
 	if n.Author != nil {
 		pr.Author = User{
