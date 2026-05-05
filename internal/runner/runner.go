@@ -149,6 +149,11 @@ func buildSourcePRs(prs []github.PR, commits []repo.Commit) []analyze.SourcePR {
 	}
 	out := make([]analyze.SourcePR, 0, len(prs))
 	for _, pr := range prs {
+		if pr.Number == 0 {
+			// Commit had no associated PR (direct push). Skip; PRs are
+			// the source of truth in v0.1.
+			continue
+		}
 		var attached []analyze.SourceCommit
 		if c, ok := bySHA[pr.MergeCommit]; ok {
 			attached = append(attached, analyze.SourceCommit{
