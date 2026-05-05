@@ -67,9 +67,22 @@ type Output struct {
 
 // Ignore lists noise sources that should be excluded from the changelog.
 type Ignore struct {
-	Authors []string `toml:"authors"`
-	Labels  []string `toml:"labels"`
-	Paths   []string `toml:"paths"`
+	Authors      []string `toml:"authors"`
+	Labels       []string `toml:"labels"`
+	Paths        []string `toml:"paths"`
+	DirectPushes *bool    `toml:"direct_pushes"`
+}
+
+// IgnoresDirectPushes reports whether the user wants direct-to-branch
+// commits (no associated PR) to be excluded from the changelog. Default
+// is true: shipnote v0.1 ignored direct pushes entirely, and we keep
+// that as the conservative default. Set [ignore] direct_pushes = false
+// to include them.
+func (i Ignore) IgnoresDirectPushes() bool {
+	if i.DirectPushes == nil {
+		return true
+	}
+	return *i.DirectPushes
 }
 
 // Author defines an identity-merge rule. Aliases are case-insensitively

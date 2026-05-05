@@ -157,6 +157,9 @@ The widget is dependency-free vanilla JS, ~3 KB, and renders the latest N releas
 ## What's in the box (v0.1)
 
 - `git` + `github-prs` source adapters with PR/commit dedup
+- Tag-aware ranges: `--to v0.2.0` stamps `Release.Tag`, picks the right slug for the site, and links the previous release
+- Branch-aware: warns when HEAD is off your default branch; populates `repo.defaultBranch` in `release.json`
+- Optional direct-push inclusion (`[ignore] direct_pushes = false`) for first-parent commits with no PR
 - Categorization via PR labels, Conventional Commits, and `changelog:` PR-body blocks
 - Breaking-change detection (CC `!`, `BREAKING CHANGE:` footer, `breaking` label)
 - Markdown + JSON renderers, schema v1.0.0

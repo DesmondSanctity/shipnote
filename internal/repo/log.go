@@ -74,6 +74,32 @@ func (g *Git) Log(ctx context.Context, from, to string) ([]Commit, error) {
 	return commits, nil
 }
 
+// FirstParentSHAs returns the set of commit SHAs on the first-parent
+// line of `to`, restricted to the half-open range (from, to]. This is
+// the linearized branch history: PR merge commits show up here, but
+// commits internal to a merged feature branch do not. Pass an empty
+// `from` to walk to the root commit.
+func (g *Git) FirstParentSHAs(ctx context.Context, from, to string) (map[string]struct{}, error) {
+	if to == "" {
+		return nil, fmt.Errorf("repo.FirstParentSHAs: 'to' ref is required")
+	}
+	rng := to
+	if from != "" {
+		rng = from + ".." + to
+	}
+	out, err := g.run(ctx, "log", "--first-parent", "--format=%H", rng)
+	if err != nil {
+		return nil, fmt.Errorf("git log --first-parent %s: %w", rng, err)
+	}
+	set := make(map[string]struct{})
+	for _, ln := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if s := strings.TrimSpace(ln); s != "" {
+			set[s] = struct{}{}
+		}
+	}
+	return set, nil
+}
+
 // CountReachable returns the number of commits reachable from ref. Useful
 // for sanity-checking range bounds before kicking off an expensive walk.
 func (g *Git) CountReachable(ctx context.Context, ref string) (int, error) {
