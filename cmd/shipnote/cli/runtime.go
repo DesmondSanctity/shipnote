@@ -24,7 +24,7 @@ type runOptions struct {
 	NoNetwork  bool
 
 	AI         bool   // --ai
-	AIProvider string // --ai-provider: auto|openai|groq|ollama
+	AIProvider string // --ai-provider: auto|openai|anthropic|groq|ollama|custom
 	AIModel    string // --ai-model
 	AIBaseURL  string // --ai-base-url for custom OpenAI-compatible servers
 	AIKey      string // --ai-key (rare; usually env)
@@ -105,6 +105,13 @@ func resolveAIProvider(opts runOptions) ai.Summarizer {
 			return nil
 		}
 		return ai.NewOpenAI(key, opts.AIModel)
+	case "anthropic", "claude":
+		key := firstNonEmpty(opts.AIKey, os.Getenv("ANTHROPIC_API_KEY"))
+		if key == "" {
+			_, _ = fmt.Fprintln(os.Stderr, "shipnote: --ai-provider=anthropic requires ANTHROPIC_API_KEY")
+			return nil
+		}
+		return ai.NewAnthropic(key, opts.AIModel)
 	case "groq":
 		key := firstNonEmpty(opts.AIKey, os.Getenv("GROQ_API_KEY"))
 		if key == "" {
@@ -130,6 +137,9 @@ func resolveAIProvider(opts runOptions) ai.Summarizer {
 		// Detection chain: explicit key beats local server.
 		if key := os.Getenv("OPENAI_API_KEY"); key != "" {
 			return ai.NewOpenAI(key, opts.AIModel)
+		}
+		if key := os.Getenv("ANTHROPIC_API_KEY"); key != "" {
+			return ai.NewAnthropic(key, opts.AIModel)
 		}
 		if key := os.Getenv("GROQ_API_KEY"); key != "" {
 			return ai.NewGroq(key, opts.AIModel)
