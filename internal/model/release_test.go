@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
@@ -106,5 +107,71 @@ func mustValidate(t *testing.T, schema *jsonschema.Schema, raw []byte, label str
 	}
 	if err := schema.Validate(doc); err != nil {
 		t.Fatalf("%s: schema validation failed:\n%v", label, err)
+	}
+}
+
+func sampleDetInputs() model.DeterminismInputs {
+	return model.DeterminismInputs{
+		Repo: model.Repo{
+			Provider:      "github",
+			Owner:         "acme",
+			Name:          "sdk",
+			URL:           "https://github.com/acme/sdk",
+			DefaultBranch: "main",
+		},
+		Range: model.Range{
+			From: model.RangePoint{Ref: "v2.3.0", SHA: "a1b2c3d", Date: "2026-04-15T00:00:00Z"},
+			To:   model.RangePoint{Ref: "HEAD", SHA: "f9e8d7c", Date: "2026-05-01T11:42:08Z"},
+		},
+		ConfigHash: "sha256:cfg",
+	}
+}
+
+// TestDeterminismKeyStable asserts the key is reproducible for identical inputs.
+func TestDeterminismKeyStable(t *testing.T) {
+	t.Parallel()
+	in := sampleDetInputs()
+	k1, err := model.ComputeDeterminismKey(in)
+	if err != nil {
+		t.Fatalf("compute: %v", err)
+	}
+	k2, err := model.ComputeDeterminismKey(in)
+	if err != nil {
+		t.Fatalf("compute repeat: %v", err)
+	}
+	if k1 != k2 {
+		t.Fatalf("non-deterministic: %q vs %q", k1, k2)
+	}
+	if !strings.HasPrefix(k1, "sha256:") || len(k1) != len("sha256:")+64 {
+		t.Fatalf("key has wrong shape: %q", k1)
+	}
+}
+
+// TestDeterminismKeySensitive asserts each input field changes the key.
+func TestDeterminismKeySensitive(t *testing.T) {
+	t.Parallel()
+	baseKey, err := model.ComputeDeterminismKey(sampleDetInputs())
+	if err != nil {
+		t.Fatalf("compute base: %v", err)
+	}
+	mutations := map[string]func(*model.DeterminismInputs){
+		"repo.owner":     func(in *model.DeterminismInputs) { in.Repo.Owner = "other" },
+		"repo.name":      func(in *model.DeterminismInputs) { in.Repo.Name = "other" },
+		"repo.branch":    func(in *model.DeterminismInputs) { in.Repo.DefaultBranch = "trunk" },
+		"range.from.sha": func(in *model.DeterminismInputs) { in.Range.From.SHA = "deadbee" },
+		"range.to.sha":   func(in *model.DeterminismInputs) { in.Range.To.SHA = "deadbee" },
+		"range.to.date":  func(in *model.DeterminismInputs) { in.Range.To.Date = "2026-05-02T00:00:00Z" },
+		"configHash":     func(in *model.DeterminismInputs) { in.ConfigHash = "sha256:other" },
+	}
+	for label, mutate := range mutations {
+		mutated := sampleDetInputs()
+		mutate(&mutated)
+		got, err := model.ComputeDeterminismKey(mutated)
+		if err != nil {
+			t.Fatalf("compute %s: %v", label, err)
+		}
+		if got == baseKey {
+			t.Errorf("%s: mutation did not change key", label)
+		}
 	}
 }
