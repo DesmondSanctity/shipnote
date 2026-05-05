@@ -8,10 +8,10 @@ import "github.com/spf13/cobra"
 // consistent behaviour across the two paths.
 func addAIFlags(c *cobra.Command) {
 	c.Flags().Bool("ai", false, "Enable AI summaries (off by default)")
-	c.Flags().String("ai-provider", "auto", "AI provider: auto|openai|groq|ollama|custom")
+	c.Flags().String("ai-provider", "auto", "AI provider: auto|openai|anthropic|groq|ollama|custom")
 	c.Flags().String("ai-model", "", "Model id (provider-specific default if empty)")
 	c.Flags().String("ai-base-url", "", "Base URL for --ai-provider=custom OpenAI-compatible servers")
-	c.Flags().String("ai-key", "", "API key (rare; usually set via OPENAI_API_KEY / GROQ_API_KEY)")
+	c.Flags().String("ai-key", "", "API key (rare; usually set via OPENAI_API_KEY / ANTHROPIC_API_KEY / GROQ_API_KEY)")
 }
 
 func readAIFlags(c *cobra.Command, opts *runOptions) {
