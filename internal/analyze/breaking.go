@@ -22,14 +22,21 @@ type BreakingDecision struct {
 //  3. "BREAKING CHANGE:" / "BREAKING-CHANGE:" footer in PR body
 //  4. Default: not breaking
 func DetectBreaking(in Input) BreakingDecision {
+	footer, hasFooter := breakingFromFooter(in.PRBody)
 	if d, ok := breakingFromLabels(in.Labels); ok {
+		if hasFooter {
+			d.Notice = footer.Notice
+		}
 		return d
 	}
 	if d, ok := breakingFromCC(firstNonEmpty(in.PRTitle, in.CommitMsg)); ok {
+		if hasFooter {
+			d.Notice = footer.Notice
+		}
 		return d
 	}
-	if d, ok := breakingFromFooter(in.PRBody); ok {
-		return d
+	if hasFooter {
+		return footer
 	}
 	return BreakingDecision{Breaking: false, Confidence: 0.9, Source: "default"}
 }
