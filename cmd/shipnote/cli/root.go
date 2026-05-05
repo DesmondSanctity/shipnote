@@ -22,6 +22,15 @@ func NewRootCmd() *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Version:       buildVersionString(),
+		// Bare `shipnote` invocation prints the banner then the help
+		// text. --help / subcommands skip the banner so output stays
+		// scriptable.
+		Run: func(cmd *cobra.Command, _ []string) {
+			if !noColor() {
+				printBanner(cmd.OutOrStdout())
+			}
+			_ = cmd.Help()
+		},
 	}
 
 	// Global flags. Behavior wired in subsequent PRs.
