@@ -148,20 +148,44 @@ func buildSourcePRs(prs []github.PR, commits []repo.Commit) []analyze.SourcePR {
 		bySHA[c.SHA] = c
 	}
 	out := make([]analyze.SourcePR, 0, len(prs))
+	seen := make(map[int]int, len(prs)) // PR number -> index into out
 	for _, pr := range prs {
 		if pr.Number == 0 {
 			// Commit had no associated PR (direct push). Skip; PRs are
 			// the source of truth in v0.1.
 			continue
 		}
-		var attached []analyze.SourceCommit
+		var sc *analyze.SourceCommit
 		if c, ok := bySHA[pr.MergeCommit]; ok {
-			attached = append(attached, analyze.SourceCommit{
+			sc = &analyze.SourceCommit{
 				SHA:      c.SHA,
 				ShortSHA: c.ShortSHA,
 				Message:  joinSubjectBody(c.Subject, c.Body),
-			})
+			}
 		}
+		if i, ok := seen[pr.Number]; ok {
+			// PR already recorded via another commit (merge + branch
+			// commits both resolve to the same PR). Append the extra
+			// commit if we haven't seen this SHA on it yet.
+			if sc != nil {
+				dup := false
+				for _, existing := range out[i].Commits {
+					if existing.SHA == sc.SHA {
+						dup = true
+						break
+					}
+				}
+				if !dup {
+					out[i].Commits = append(out[i].Commits, *sc)
+				}
+			}
+			continue
+		}
+		var attached []analyze.SourceCommit
+		if sc != nil {
+			attached = []analyze.SourceCommit{*sc}
+		}
+		seen[pr.Number] = len(out)
 		out = append(out, analyze.SourcePR{PR: pr, Commits: attached})
 	}
 	return out
