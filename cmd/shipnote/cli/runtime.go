@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/DesmondSanctity/shipnote/internal/ai"
 	"github.com/DesmondSanctity/shipnote/internal/config"
 	"github.com/DesmondSanctity/shipnote/internal/runner"
 )
@@ -20,6 +22,12 @@ type runOptions struct {
 	Token      string
 	CacheDir   string
 	NoNetwork  bool
+
+	AI         bool   // --ai
+	AIProvider string // --ai-provider: auto|openai|groq|ollama
+	AIModel    string // --ai-model
+	AIBaseURL  string // --ai-base-url for custom OpenAI-compatible servers
+	AIKey      string // --ai-key (rare; usually env)
 }
 
 func resolveRepoRoot() (string, error) {
@@ -68,8 +76,82 @@ func executeRun(ctx context.Context, opts runOptions) (runner.Outputs, config.Co
 		CacheDir:  defaultCacheDir(root),
 		NoNetwork: opts.NoNetwork,
 	}
+	if opts.AI {
+		prov := resolveAIProvider(opts)
+		if prov != nil {
+			in.AIProvider = prov
+			in.AICache = &ai.Cache{Dir: filepath.Join(root, ".shipnote", "cache", "ai")}
+			in.AILogger = func(msg string) { _, _ = fmt.Fprintln(os.Stderr, msg) }
+		}
+	}
 	out, err := runner.Run(ctx, in)
 	return out, cfg, root, err
+}
+
+// resolveAIProvider builds a Summarizer from the user flags. Returns
+// nil with a warning when the requested provider has no usable key /
+// endpoint; the runner treats nil as 'AI off' which keeps the
+// deterministic baseline intact.
+func resolveAIProvider(opts runOptions) ai.Summarizer {
+	provider := strings.ToLower(opts.AIProvider)
+	if provider == "" {
+		provider = "auto"
+	}
+	switch provider {
+	case "openai":
+		key := firstNonEmpty(opts.AIKey, os.Getenv("OPENAI_API_KEY"))
+		if key == "" {
+			_, _ = fmt.Fprintln(os.Stderr, "shipnote: --ai-provider=openai requires OPENAI_API_KEY")
+			return nil
+		}
+		return ai.NewOpenAI(key, opts.AIModel)
+	case "groq":
+		key := firstNonEmpty(opts.AIKey, os.Getenv("GROQ_API_KEY"))
+		if key == "" {
+			_, _ = fmt.Fprintln(os.Stderr, "shipnote: --ai-provider=groq requires GROQ_API_KEY")
+			return nil
+		}
+		return ai.NewGroq(key, opts.AIModel)
+	case "ollama":
+		model := opts.AIModel
+		if model == "" {
+			model = "llama3.2:1b"
+		}
+		return ai.NewOllama(model)
+	case "custom":
+		if opts.AIBaseURL == "" {
+			_, _ = fmt.Fprintln(os.Stderr, "shipnote: --ai-provider=custom requires --ai-base-url")
+			return nil
+		}
+		return ai.NewOpenAICompatible(ai.OpenAICompatibleConfig{
+			Name: "custom", BaseURL: opts.AIBaseURL, APIKey: opts.AIKey, Model: opts.AIModel,
+		})
+	case "auto":
+		// Detection chain: explicit key beats local server.
+		if key := os.Getenv("OPENAI_API_KEY"); key != "" {
+			return ai.NewOpenAI(key, opts.AIModel)
+		}
+		if key := os.Getenv("GROQ_API_KEY"); key != "" {
+			return ai.NewGroq(key, opts.AIModel)
+		}
+		model := opts.AIModel
+		if model == "" {
+			model = "llama3.2:1b"
+		}
+		return ai.NewOllama(model)
+	default:
+		_, _ = fmt.Fprintf(os.Stderr, "shipnote: unknown --ai-provider %q\n", opts.AIProvider)
+		return nil
+	}
+}
+
+func firstNonEmpty(s ...string) string {
+	for _, v := range s {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 // stringFlag pulls a string flag, panicking on developer error

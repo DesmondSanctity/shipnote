@@ -30,6 +30,7 @@ func newGenerateCmd() *cobra.Command {
 	c.Flags().Bool("check", false, "Exit non-zero if regenerating would change output")
 	c.Flags().String("token", "", "GitHub token (default: $GITHUB_TOKEN)")
 	c.Flags().Bool("no-network", false, "Skip GitHub; render git-only changelog")
+	addAIFlags(c)
 	return c
 }
 
@@ -41,6 +42,7 @@ func runGenerate(cmd *cobra.Command, _ []string) error {
 		Token:      stringFlag(cmd, "token"),
 		NoNetwork:  boolFlag(cmd, "no-network"),
 	}
+	readAIFlags(cmd, &opts)
 	check := boolFlag(cmd, "check")
 	out, cfg, root, err := executeRun(cmd.Context(), opts)
 	if err != nil {
@@ -72,6 +74,7 @@ func newPreviewCmd() *cobra.Command {
 	c.Flags().String("format", "markdown", "Output format (markdown or json)")
 	c.Flags().String("token", "", "GitHub token (default: $GITHUB_TOKEN)")
 	c.Flags().Bool("no-network", false, "Skip GitHub; render git-only changelog")
+	addAIFlags(c)
 	return c
 }
 
@@ -83,6 +86,7 @@ func runPreview(cmd *cobra.Command, _ []string) error {
 		Token:      stringFlag(cmd, "token"),
 		NoNetwork:  boolFlag(cmd, "no-network"),
 	}
+	readAIFlags(cmd, &opts)
 	format := stringFlag(cmd, "format")
 	out, _, _, err := executeRun(cmd.Context(), opts)
 	if err != nil {

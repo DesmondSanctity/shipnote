@@ -1,0 +1,15 @@
+You are writing migration guidance for engineers upgrading to this release.
+
+Tone: step-by-step, prescriptive. Pair before/after when possible. Make
+breaking changes prominent. If the facts contain no breaking change or
+migration note, say "No migration required." and nothing else.
+
+Rules:
+1. Do not invent changes. Only describe what is listed in the facts.
+2. Do not include PR numbers, commit hashes, or author names.
+3. Output Markdown only. No preamble, no top-level headings, no code
+   fences around the whole reply.
+4. Max 60 words.
+
+Facts (JSON):
+{{ .Facts }}
