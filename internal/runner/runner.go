@@ -31,6 +31,7 @@ type Inputs struct {
 	Cfg       config.Config // resolved config
 	CacheDir  string        // GitHub response cache; empty disables
 	NoNetwork bool          // skip GitHub call (git-only fallback)
+	Endpoint  string        // GraphQL endpoint override; empty = api.github.com (test hook)
 }
 
 // Outputs is what Run produces. Markdown / JSON are byte-identical
@@ -133,7 +134,7 @@ func collectPRs(ctx context.Context, in Inputs, owner, name string, commits []re
 	if len(shas) == 0 {
 		return nil, nil
 	}
-	opts := github.Options{Token: in.Token}
+	opts := github.Options{Token: in.Token, Endpoint: in.Endpoint}
 	if in.CacheDir != "" {
 		opts.Cache = github.NewFileCache(in.CacheDir)
 	}
