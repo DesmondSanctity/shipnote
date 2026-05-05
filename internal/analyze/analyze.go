@@ -74,7 +74,7 @@ func Analyze(prs []SourcePR, opts Options) model.Release {
 		decision := opts.Filter.Apply(ch, labels, src.PR.Author.IsBot)
 		if !decision.Keep {
 			excluded = append(excluded, model.ExcludedRecord{
-				ID:     prID(src.PR),
+				ID:     ch.ID,
 				Reason: decision.Reason,
 			})
 			continue
@@ -102,6 +102,35 @@ func Analyze(prs []SourcePR, opts Options) model.Release {
 
 func buildChange(src SourcePR, cat CategoryDecision, brk BreakingDecision, mapper PackageMapper) model.Change {
 	pr := src.PR
+	// Direct-push synthesized entry: no PR, ChangeSource.Kind = commit.
+	if pr.Number == 0 {
+		title := StripCCPrefix(pr.Title)
+		ch := model.Change{
+			ID:       directChangeID(src),
+			Type:     cat.Type,
+			Breaking: brk.Breaking,
+			Title:    title,
+			Source: model.ChangeSource{
+				Kind:    model.SourceKindCommit,
+				Adapter: "git",
+				Commits: convertCommits(src.Commits),
+			},
+			Author: model.Contributor{
+				Login: pr.Author.Login,
+				Name:  pr.Author.Name,
+				URL:   pr.Author.URL,
+			},
+			Packages: PackagesForFiles(mapper, nil),
+			Confidence: model.Confidence{
+				Category: cat.Confidence,
+				Breaking: brk.Confidence,
+			},
+		}
+		if brk.Notice != "" {
+			ch.Migration = &model.Migration{Summary: brk.Notice}
+		}
+		return ch
+	}
 	ch := model.Change{
 		ID:       prID(pr),
 		Type:     cat.Type,
@@ -135,6 +164,20 @@ func buildChange(src SourcePR, cat CategoryDecision, brk BreakingDecision, mappe
 		ch.Migration = &model.Migration{Summary: brk.Notice}
 	}
 	return ch
+}
+
+func directChangeID(src SourcePR) string {
+	if len(src.Commits) > 0 && src.Commits[0].ShortSHA != "" {
+		return "commit:" + src.Commits[0].ShortSHA
+	}
+	if len(src.Commits) > 0 && src.Commits[0].SHA != "" {
+		sha := src.Commits[0].SHA
+		if len(sha) > 7 {
+			sha = sha[:7]
+		}
+		return "commit:" + sha
+	}
+	return "commit:unknown"
 }
 
 func collectBreaking(changes []model.Change) []model.BreakingChange {

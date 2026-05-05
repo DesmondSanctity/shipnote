@@ -75,6 +75,7 @@ func executeRun(ctx context.Context, opts runOptions) (runner.Outputs, config.Co
 		Cfg:       cfg,
 		CacheDir:  defaultCacheDir(root),
 		NoNetwork: opts.NoNetwork,
+		Warn:      func(msg string) { _, _ = fmt.Fprintln(os.Stderr, msg) },
 	}
 	if opts.AI {
 		prov := resolveAIProvider(opts)

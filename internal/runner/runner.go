@@ -40,6 +40,10 @@ type Inputs struct {
 	AICache     *ai.Cache
 	AIAudiences []ai.Audience
 	AILogger    func(msg string)
+
+	// Warn receives non-fatal advisories (e.g. "you are on a non-default
+	// branch"). The runner will not abort even if Warn is nil.
+	Warn func(msg string)
 }
 
 // Outputs is what Run produces. Markdown / JSON are byte-identical
@@ -72,6 +76,30 @@ func Run(ctx context.Context, in Inputs) (Outputs, error) {
 		return Outputs{}, fmt.Errorf("resolve range: %w", err)
 	}
 
+	// Tag set used for inference of Release.Tag and PreviousReleaseID.
+	allTags, err := g.Tags(ctx, "")
+	if err != nil {
+		return Outputs{}, fmt.Errorf("list tags: %w", err)
+	}
+	tagSet := make(map[string]struct{}, len(allTags))
+	for _, t := range allTags {
+		tagSet[t.Name] = struct{}{}
+	}
+
+	defaultBranch := g.DefaultBranch(ctx)
+	if cur, err := g.CurrentBranch(ctx); err == nil && in.Warn != nil {
+		// Only warn when the user asked for HEAD (implicit or explicit)
+		// AND HEAD is on a non-default branch. An explicit ref/SHA/tag
+		// is intentional, never noisy.
+		if cur != "" && cur != "HEAD" && cur != defaultBranch &&
+			(in.ToRef == "" || in.ToRef == "HEAD") {
+			in.Warn(fmt.Sprintf(
+				"shipnote: HEAD is on branch %q (default is %q); changelog will reflect this branch's history",
+				cur, defaultBranch,
+			))
+		}
+	}
+
 	commits, err := g.Log(ctx, rng.From.SHA, rng.To.SHA)
 	if err != nil {
 		return Outputs{}, fmt.Errorf("git log: %w", err)
@@ -82,14 +110,26 @@ func Run(ctx context.Context, in Inputs) (Outputs, error) {
 		return Outputs{}, fmt.Errorf("github collect: %w", err)
 	}
 
-	rel := analyze.Analyze(buildSourcePRs(prs, commits), analyzeOptions(in.Cfg))
+	includeDirect := !in.Cfg.Ignore.IgnoresDirectPushes()
+	var firstParents map[string]struct{}
+	if includeDirect {
+		firstParents, err = g.FirstParentSHAs(ctx, rng.From.SHA, rng.To.SHA)
+		if err != nil {
+			return Outputs{}, fmt.Errorf("first-parent walk: %w", err)
+		}
+	}
+
+	rel := analyze.Analyze(
+		buildSourcePRs(prs, commits, includeDirect, firstParents),
+		analyzeOptions(in.Cfg),
+	)
 	rel.ID = computeReleaseID(owner, name, rng)
 	rel.Repo = model.Repo{
 		Provider:      "github",
 		Owner:         owner,
 		Name:          name,
 		URL:           fmt.Sprintf("https://github.com/%s/%s", owner, name),
-		DefaultBranch: "",
+		DefaultBranch: defaultBranch,
 	}
 	rel.Range = model.Range{
 		From: model.RangePoint{Ref: rng.From.Ref, SHA: rng.From.SHA, Date: rng.From.Date},
@@ -104,6 +144,20 @@ func Run(ctx context.Context, in Inputs) (Outputs, error) {
 	rel.Metadata.DeterminismKey = key
 	rel.Metadata.Sources = []string{"github-prs", "git"}
 	rel.Release.State = model.ReleaseStateUnreleased
+
+	// Tag inference: if the user pointed --to at an existing tag, treat
+	// this as a released changelog and stamp Release.Tag + publishedAt.
+	// If --from is also a tag, link the previous release id so the site
+	// can render a proper "previous release" pointer.
+	if _, ok := tagSet[rng.To.Ref]; ok {
+		rel.Release.Tag = rng.To.Ref
+		rel.Release.State = model.ReleaseStateReleased
+		published := rng.To.Date
+		rel.Release.PublishedAt = &published
+	}
+	if _, ok := tagSet[rng.From.Ref]; ok {
+		rel.PreviousReleaseID = "rel-" + rng.From.Ref
+	}
 
 	md := renderMarkdown(rel)
 	// AI runs AFTER the deterministic Markdown is captured so that
@@ -161,18 +215,32 @@ func collectPRs(ctx context.Context, in Inputs, owner, name string, commits []re
 	return client.PRsForCommits(ctx, owner, name, shas)
 }
 
-func buildSourcePRs(prs []github.PR, commits []repo.Commit) []analyze.SourcePR {
+func buildSourcePRs(
+	prs []github.PR,
+	commits []repo.Commit,
+	includeDirect bool,
+	firstParents map[string]struct{},
+) []analyze.SourcePR {
 	bySHA := make(map[string]repo.Commit, len(commits))
 	for _, c := range commits {
 		bySHA[c.SHA] = c
 	}
 	out := make([]analyze.SourcePR, 0, len(prs))
-	seen := make(map[int]int, len(prs)) // PR number -> index into out
-	for _, pr := range prs {
+	seen := make(map[int]int, len(prs))            // PR number -> index into out
+	covered := make(map[string]struct{}, len(prs)) // SHAs already represented by a PR
+	// prs is aligned with the commits list passed to PRsForCommits, so
+	// prs[i] corresponds to commits[i]. We mark commits[i].SHA as covered
+	// when prs[i].Number > 0 (a real association exists), AND any
+	// MergeCommit SHA the PR points at.
+	for i, pr := range prs {
 		if pr.Number == 0 {
-			// Commit had no associated PR (direct push). Skip; PRs are
-			// the source of truth in v0.1.
 			continue
+		}
+		if i < len(commits) {
+			covered[commits[i].SHA] = struct{}{}
+		}
+		if pr.MergeCommit != "" {
+			covered[pr.MergeCommit] = struct{}{}
 		}
 		var sc *analyze.SourceCommit
 		if c, ok := bySHA[pr.MergeCommit]; ok {
@@ -182,20 +250,20 @@ func buildSourcePRs(prs []github.PR, commits []repo.Commit) []analyze.SourcePR {
 				Message:  joinSubjectBody(c.Subject, c.Body),
 			}
 		}
-		if i, ok := seen[pr.Number]; ok {
+		if idx, ok := seen[pr.Number]; ok {
 			// PR already recorded via another commit (merge + branch
 			// commits both resolve to the same PR). Append the extra
 			// commit if we haven't seen this SHA on it yet.
 			if sc != nil {
 				dup := false
-				for _, existing := range out[i].Commits {
+				for _, existing := range out[idx].Commits {
 					if existing.SHA == sc.SHA {
 						dup = true
 						break
 					}
 				}
 				if !dup {
-					out[i].Commits = append(out[i].Commits, *sc)
+					out[idx].Commits = append(out[idx].Commits, *sc)
 				}
 			}
 			continue
@@ -206,6 +274,38 @@ func buildSourcePRs(prs []github.PR, commits []repo.Commit) []analyze.SourcePR {
 		}
 		seen[pr.Number] = len(out)
 		out = append(out, analyze.SourcePR{PR: pr, Commits: attached})
+	}
+	if includeDirect {
+		// Synthesize PR-less entries for commits on the first-parent
+		// line of `to` that no PR claimed. Walk in reverse (oldest
+		// first) so the analyzer sees a stable order; Group will
+		// re-sort by category afterward anyway.
+		for i := len(commits) - 1; i >= 0; i-- {
+			c := commits[i]
+			if _, ok := firstParents[c.SHA]; !ok {
+				continue
+			}
+			if _, ok := covered[c.SHA]; ok {
+				continue
+			}
+			out = append(out, analyze.SourcePR{
+				PR: github.PR{
+					Number:   0,
+					Title:    c.Subject,
+					Body:     c.Body,
+					MergedAt: c.Date,
+					Author: github.User{
+						Login: c.AuthorEmail,
+						Name:  c.AuthorName,
+					},
+				},
+				Commits: []analyze.SourceCommit{{
+					SHA:      c.SHA,
+					ShortSHA: c.ShortSHA,
+					Message:  joinSubjectBody(c.Subject, c.Body),
+				}},
+			})
+		}
 	}
 	return out
 }
